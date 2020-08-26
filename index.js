@@ -1,4 +1,5 @@
 const fetch = require('node-fetch')
+require('dotenv').config()
 
 async function sendMessage({text, ts}) {
   const token = process.env.SLACK_TOKEN
