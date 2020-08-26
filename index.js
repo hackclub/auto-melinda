@@ -4,9 +4,14 @@ require('dotenv').config()
 async function sendMessage({text, ts}) {
   const token = process.env.SLACK_TOKEN
   const channel = 'GNTFDNEF8'
-  const result = await (await fetch(`http://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${text}&thread_ts=${ts}`, {
-    method: "POST"
-  })).json()
+  try {
+    const result = await (await fetch(`http://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${text}&thread_ts=${ts}`, {
+      method: "POST"
+    })).json()
+    console.log(result)
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 async function getMissions(opts) {
