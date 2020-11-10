@@ -1,14 +1,16 @@
 const fetch = require('node-fetch')
 require('dotenv').config()
 
+const MAILDOG = 'URZHZS3L6'
+const POSTMASTER = 'UNRAW3K7F'
+const MAILTEAM = 'GNTFDNEF8'
+
 async function sendMessage({text, ts}) {
   const token = process.env.SLACK_TOKEN
-  const channel = 'GNTFDNEF8'
   try {
-    const result = await (await fetch(`http://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${text}&thread_ts=${ts}`, {
+    const result = await (await fetch(`http://slack.com/api/chat.postMessage?token=${token}&channel=${MAILTEAM}&text=${text}&thread_ts=${ts}`, {
       method: "POST"
     })).json()
-    console.log(result)
   } catch (e) {
     console.error(e)
   }
@@ -23,43 +25,55 @@ async function getMissions(opts) {
   return results
 }
 
-async function acceptAll() {
-  const missionTypes = "Sticker Box,Sticker Envelope,Hack Pack Envelope".split(',')
-  const filterByFormula = `AND({Status}='1 Unassigned',OR(${missionTypes.map(m=>`{Scenario Name}="${m}"`).join(',')}))`
-  const missionTSs = (await getMissions({filterByFormula})).map(obj => obj.fields['Mail Team Thread Timestamp'])
-  console.log(`Accepting ${missionTSs.length} missions`)
+async function forEachInFilter(filterByFormula, sleepTime = 100, cb) {
+  const missionTSs = await (await getMissions({filterByFormula})).map(obj => obj.fields['Mail Team Thread Timestamp'])
+  if (missionTSs.length == 0) {
+    console.log('     ...no missions found.')
+    return
+  }
 
-  missionTSs.forEach(async (ts, i) => {
-    await new Promise(resolve => {setTimeout(resolve, 10000 * i)})
-    await sendMessage({ts, text: '<@UNRAW3K7F> accept'})
-    console.log(`Accept ${i+1}: https://hackclub.slack.com/archives/GNTFDNEF8/p${ts.replace('.','')}`)
+  await missionTSs.reduce(async (acc, ts, i, missions) => {
+    await acc
+    await cb(ts, i, missions)
+    await new Promise(resolve => setTimeout(resolve, sleepTime))
+  }, undefined)
+}
+
+async function acceptAll() {
+  console.log('Looking for missions to accept...')
+  const missionTypes = "GCH Stickers,Sticker Box,Sticker Envelope,Hack Pack Envelope".split(',')
+  const filterByFormula = `AND({Status}='1 Unassigned',{Dropped}=FALSE(),OR(${missionTypes.map(m=>`{Scenario Name}="${m}"`).join(',')}))`
+
+  await forEachInFilter(filterByFormula, 100, async (ts, i, missions) => {
+    console.log(`Accepting ${i+1}/${missions.length}: https://hackclub.slack.com/archives/${MAILTEAM}/p${ts.replace('.','')}`)
+    await sendMessage({ts, text: `<@${MAILDOG}> accept`})
   })
 }
 
 async function purchaseAll() {
-  const filterByFormula = `AND({Status}='2 Assigned',{Sender}='melinda_lawson_1996_16',{Address Missing Fields}='false',NOT({Valid Names}=BLANK()),{Address First Line Too Long}='false')`
-  const missionTSs = (await getMissions({filterByFormula})).map(obj => obj.fields['Mail Team Thread Timestamp'])
-  console.log(`Purchasing ${missionTSs.length} missions`)
+  //const filterByFormula = `AND({Status}='2 Assigned',{Sender}='melinda_lawson_1996_16',{Address Missing Fields}=FALSE(),NOT({Valid Names}=BLANK()),{Address Too Long}=FALSE())`
+  const filterByFormula = `AND({Status}='2 Assigned',{Sender}='melinda_lawson_1996_16',{Address Missing Fields}=FALSE(),{Address Too Long}=FALSE())`
 
-  missionTSs.forEach(async (ts, i) => {
-    await new Promise(resolve => {setTimeout(resolve, 10000 * i)})
-    await sendMessage({ts, text: '<@UNRAW3K7F> purchase'})
-    console.log(`Purchase ${i+1}: https://hackclub.slack.com/archives/GNTFDNEF8/p${ts.replace('.','')}`)
+  await forEachInFilter(filterByFormula, 60000, async (ts, i, missions) => {
+    console.log(`Purchasing ${i+1}/${missions.length}: https://hackclub.slack.com/archives/${MAILTEAM}/p${ts.replace('.','')}`)
+    await sendMessage({ts, text: `<@${POSTMASTER}> purchase`})
   })
 }
 
 async function requestAll() {
+  console.log('Looking for missions to request...')
   const filterByFormula = `AND({Status}='2 Assigned',{Sender}='melinda_lawson_1996_16',{Address Missing Fields}='true',{Address Status Escaped}='true')`
-  const missionTSs = (await getMissions({filterByFormula})).map(obj => obj.fields['Mail Team Thread Timestamp'])
-  console.log(`Requesting ${missionTSs.length} missions`)
 
-  missionTSs.forEach(async (ts, i) => {
-    await new Promise(resolve => {setTimeout(resolve, 10000 * i)})
-    await sendMessage({ts, text: '<@UNRAW3K7F> request'})
-    console.log(`Request ${i+1}: https://hackclub.slack.com/archives/GNTFDNEF8/p${ts.replace('.','')}`)
+  await forEachInFilter(filterByFormula, 30000, async (ts, i, missions) => {
+    console.log(`Requesting ${i+1}/${missions.length}: https://hackclub.slack.com/archives/${MAILTEAM}/p${ts.replace('.','')}`)
+    await sendMessage({ts, text: `<@${MAILDOG}> request`})
   })
 }
 
-acceptAll()
-purchaseAll()
-requestAll()
+async function run() {
+  await acceptAll()
+  await purchaseAll()
+  // await requestAll()
+}
+
+run()
