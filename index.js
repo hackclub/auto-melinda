@@ -72,11 +72,22 @@ async function acceptAll() {
 }
 
 async function purchaseAll() {
+  console.log('Looking for missions to purchase...')
   //const filterByFormula = `AND({Status}='2 Assigned',{Sender}='melinda_lawson_1996_16',{Address Missing Fields}=FALSE(),NOT({Valid Names}=BLANK()),{Address Too Long}=FALSE())`
   const filterByFormula = `AND({Status}='2 Assigned',{Sender}='melinda_lawson_1996_16',{Address Missing Fields}=FALSE(),{Address Too Long}=FALSE())`
 
   await forEachInFilter(filterByFormula, 60000, async (ts, i, missions) => {
     console.log(`Purchasing ${i+1}/${missions.length}: https://hackclub.slack.com/archives/${MAILTEAM}/p${ts.replace('.','')}`)
+    await sendMessage({ts, text: `<@${POSTMASTER}> purchase`})
+  })
+}
+
+async function leapAll() {
+  console.log('Looking for LEAP missions to purchase...')
+  const filterByFormula = `AND({Status}='2 Assigned',{Scenario Name}='Orpheus Leap',{Sender}='roshan_palakkal_508_22')`
+
+  await forEachInFilter(filterByFormula, 60000, async (ts, i, missions) => {
+    console.log(`Purchasing LEAP mission ${i+1}/${missions.length}: https://hackclub.slack.com/archives/${MAILTEAM}/p${ts.replace('.','')}`)
     await sendMessage({ts, text: `<@${POSTMASTER}> purchase`})
   })
 }
@@ -95,8 +106,12 @@ async function run() {
   await dedupeAll()
   await new Promise(resolve => setTimeout(resolve, 5000))
   await acceptAll()
+  await new Promise(resolve => setTimeout(resolve, 5000))
   await purchaseAll()
+  await new Promise(resolve => setTimeout(resolve, 5000))
   // await requestAll()
+  //await new Promise(resolve => setTimeout(resolve, 5000))
+  //await leapAll()
 }
 
 run()
