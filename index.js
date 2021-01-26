@@ -17,11 +17,7 @@ async function sendMessage({text, ts}) {
 }
 
 async function getMissions(opts) {
-  const options = {
-    authToken: process.env.AIRTABLE_TOKEN,
-    ...opts
-  }
-  const results = await (await fetch(`https://api2.hackclub.com/v0.1/Operations/Mail Missions?select=${JSON.stringify(options)}`)).json()
+  const results = await (await fetch(`https://api2.hackclub.com/v0.1/Operations/Mail Missions?authKey=${process.env.AIRTABLE_TOKEN}&select=${JSON.stringify(opts)}`)).json()
   return results
 }
 
@@ -37,6 +33,31 @@ async function forEachInFilter(filterByFormula, sleepTime = 100, cb) {
     await cb(ts, i, missions)
     await new Promise(resolve => setTimeout(resolve, sleepTime))
   }, undefined)
+}
+
+async function dedupeAll() {
+  console.log('Looking for missions to dedupe...')
+  const missionTypes = "GCH Stickers,Sticker Box,Sticker Envelope,Hack Pack Envelope".split(',')
+  const filterByFormula = `AND({Status}='1 Unassigned',{Dropped}=FALSE(),OR(${missionTypes.map(m=>`{Scenario Name}="${m}"`).join(',')}))`
+  const firstTimeSending = {}
+  const duplicateMissions = await (await getMissions({filterByFormula})).filter(mission => {
+    if (firstTimeSending[mission.fields['Receiving Person']] == true) {
+      return true
+    } else {
+      firstTimeSending[mission.fields['Receiving Person']] = true
+      return false
+    }
+  })
+
+  let i = 0
+  for (const mission of duplicateMissions) {
+    const ts = mission.fields['Mail Team Thread Timestamp']
+    console.log(`Deduping ${i+1}/${duplicateMissions.length}: https://hackclub.slack.com/archives/${MAILTEAM}/p${ts.replace('.','')}`)
+    i++
+    await sendMessage({ts, text: `This is a duplicate mission`})
+    await sendMessage({ts, text: `<@${MAILDOG}> drop`})
+    await new Promise(resolve => setTimeout(resolve, 1000))
+  }
 }
 
 async function acceptAll() {
@@ -71,6 +92,8 @@ async function requestAll() {
 }
 
 async function run() {
+  await dedupeAll()
+  await new Promise(resolve => setTimeout(resolve, 5000))
   await acceptAll()
   await purchaseAll()
   // await requestAll()
