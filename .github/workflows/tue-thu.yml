@@ -1,0 +1,21 @@
+name: Maintain Webring
+
+on:
+  schedule:
+    - cron: 0 0 * * THU
+    - cron: 0 0 * * TUE
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+
+    - name: Run auto melinda!
+      run: |
+        node index.js
