@@ -35,7 +35,7 @@ async function forEachInFilter(filterByFormula, sleepTime = 100, cb) {
   }, undefined)
 }
 
-async function dedupeAll() {
+async function dedupeAll(sleepTime = 5000) {
   console.log('Looking for missions to dedupe...')
   const missionTypes = "GCH Stickers,Sticker Box,Sticker Envelope,Hack Pack Envelope".split(',')
   const filterByFormula = `AND({Status}='1 Unassigned',{Dropped}=FALSE(),OR(${missionTypes.map(m=>`{Scenario Name}="${m}"`).join(',')}))`
@@ -56,27 +56,27 @@ async function dedupeAll() {
     i++
     await sendMessage({ts, text: `This is a duplicate mission`})
     await sendMessage({ts, text: `<@${MAILDOG}> drop`})
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, sleepTime))
   }
 }
 
-async function acceptAll() {
+async function acceptAll(sleepTime = 5000) {
   console.log('Looking for missions to accept...')
   const missionTypes = "GCH Stickers,Sticker Box,Sticker Envelope,Hack Pack Envelope".split(',')
   const filterByFormula = `AND({Status}='1 Unassigned',{Dropped}=FALSE(),OR(${missionTypes.map(m=>`{Scenario Name}="${m}"`).join(',')}))`
 
-  await forEachInFilter(filterByFormula, 100, async (ts, i, missions) => {
+  await forEachInFilter(filterByFormula, sleepTime, async (ts, i, missions) => {
     console.log(`Accepting ${i+1}/${missions.length}: https://hackclub.slack.com/archives/${MAILTEAM}/p${ts.replace('.','')}`)
     await sendMessage({ts, text: `<@${MAILDOG}> accept`})
   })
 }
 
-async function purchaseAll() {
+async function purchaseAll(sleepTime = 60000) {
   console.log('Looking for missions to purchase...')
   //const filterByFormula = `AND({Status}='2 Assigned',{Sender}='melinda_lawson_1996_16',{Address Missing Fields}=FALSE(),NOT({Valid Names}=BLANK()),{Address Too Long}=FALSE())`
   const filterByFormula = `AND({Status}='2 Assigned',{Sender}='melinda_lawson_1996_16',{Address Missing Fields}=FALSE(),{Address Too Long}=FALSE())`
 
-  await forEachInFilter(filterByFormula, 60000, async (ts, i, missions) => {
+  await forEachInFilter(filterByFormula, sleepTime, async (ts, i, missions) => {
     console.log(`Purchasing ${i+1}/${missions.length}: https://hackclub.slack.com/archives/${MAILTEAM}/p${ts.replace('.','')}`)
     await sendMessage({ts, text: `<@${POSTMASTER}> purchase`})
   })
@@ -92,23 +92,23 @@ async function leapAll() {
   })
 }
 
-async function requestAll() {
+async function requestAll(sleepTime = 30000) {
   console.log('Looking for missions to request...')
   const filterByFormula = `AND({Status}='2 Assigned',{Sender}='melinda_lawson_1996_16',{Address Missing Fields}='true',{Address Status Escaped}='true')`
 
-  await forEachInFilter(filterByFormula, 30000, async (ts, i, missions) => {
+  await forEachInFilter(filterByFormula, sleepTime, async (ts, i, missions) => {
     console.log(`Requesting ${i+1}/${missions.length}: https://hackclub.slack.com/archives/${MAILTEAM}/p${ts.replace('.','')}`)
     await sendMessage({ts, text: `<@${MAILDOG}> request`})
   })
 }
 
 async function run() {
-  await dedupeAll()
+  await dedupeAll(2000)
   await new Promise(resolve => setTimeout(resolve, 5000))
-  await acceptAll()
+  await acceptAll(10000)
   await new Promise(resolve => setTimeout(resolve, 5000))
-  await purchaseAll()
-  await new Promise(resolve => setTimeout(resolve, 5000))
+  await purchaseAll(60000)
+  // await new Promise(resolve => setTimeout(resolve, 5000))
   // await requestAll()
   //await new Promise(resolve => setTimeout(resolve, 5000))
   //await leapAll()
