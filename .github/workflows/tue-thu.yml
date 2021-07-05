@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: 0 0 * * THU
     - cron: 0 0 * * TUE
+  push:
+    branches: [ master ]
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
