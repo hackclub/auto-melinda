@@ -1,0 +1,25 @@
+name: Request Addresses
+
+on:
+  push:
+    branches: [ master ]
+  schedule:
+    - cron: 0/15 * * * *
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
+  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+
+    - name: Request them all!
+      run: |
+        yarn
+        node request.js
