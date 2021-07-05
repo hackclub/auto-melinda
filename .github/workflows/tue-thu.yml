@@ -22,4 +22,5 @@ jobs:
 
     - name: Run auto melinda!
       run: |
+        yarn
         node index.js
