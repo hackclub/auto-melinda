@@ -2,8 +2,8 @@ name: AutoMelinda! Main Script
 
 on:
   schedule:
-    - cron: 0 0 * * THU
-    - cron: 0 0 * * TUE
+    - cron: 0 17 * * THU
+    - cron: 0 17 * * TUE
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
