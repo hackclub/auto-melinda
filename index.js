@@ -37,7 +37,7 @@ async function forEachInFilter(filterByFormula, sleepTime = 100, cb) {
 
 async function dedupeAll(sleepTime = 5000) {
   console.log('Looking for missions to dedupe...')
-  const missionTypes = "GCH Stickers,Sticker Box,Sticker Envelope,Hack Pack Envelope".split(',')
+  const missionTypes = "GCH Stickers,Sticker Envelope,Hack Pack Envelope".split(',')
   const filterByFormula = `AND({Status}='1 Unassigned',{Dropped}=FALSE(),OR(${missionTypes.map(m=>`{Scenario Name}="${m}"`).join(',')}))`
   const firstTimeSending = {}
   const duplicateMissions = await (await getMissions({filterByFormula})).filter(mission => {
@@ -62,7 +62,7 @@ async function dedupeAll(sleepTime = 5000) {
 
 async function acceptAll(sleepTime = 5000) {
   console.log('Looking for missions to accept...')
-  const missionTypes = "GCH Stickers,Sticker Box,Sticker Envelope,Hack Pack Envelope".split(',')
+  const missionTypes = "GCH Stickers,Sticker Envelope,Hack Pack Envelope".split(',')
   const filterByFormula = `AND({Status}='1 Unassigned',{Dropped}=FALSE(),OR(${missionTypes.map(m=>`{Scenario Name}="${m}"`).join(',')}))`
 
   await forEachInFilter(filterByFormula, sleepTime, async (ts, i, missions) => {
